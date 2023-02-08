@@ -262,9 +262,8 @@ class MarpSlide
                         "xmlns": "http://www.w3.org/1999/xhtml"
                         style:
                             backgroundColor: "white"
-                        # style:
-                        #     width: 1600
-                        #     height: 900
+                            width: "1600" # vunits don't work here (???)
+                            height: "900"
                         children
 
 

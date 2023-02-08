@@ -267,6 +267,7 @@ and there are
 //       plus the absence of min height can yield weird, non-centered graphics.
 //       But overall, the stuff works.
 // TODO: display the background which is not foreign object differently.
+//       Yeah, better. Easier to spot the fuck that is going on.
 MarpSlide = class MarpSlide {
   view({children}) {
     return m("div", {
@@ -298,11 +299,10 @@ MarpSlide = class MarpSlide {
     }, m("section", {
       "xmlns": "http://www.w3.org/1999/xhtml",
       style: {
-        backgroundColor: "white"
+        backgroundColor: "white",
+        width: "1600", // vunits don't work here (???)
+        height: "900"
       }
-    // style:
-    //     width: 1600
-    //     height: 900
     }, children))));
   }
 
