@@ -189,12 +189,13 @@ class Slide42
             style: 
                 fontFamily: "Figtree"
                 fontWeight: 900
-                padding: 96 + "px"
-                height: "calc(100vh - 2*96px)"
+                #padding: 96 + "px"
+                height: "100%" # "calc(100vh - 2*96px)"
                 display: "grid"
                 gridTemplateColumns: "1fr 3fr"
                 gap: 48 + "px"
                 alignItems: "center"
+                overflow: "hidden"
             m ScopedStyle, 
                 id: id
                 css:
@@ -236,11 +237,12 @@ class MarpSlide
     view: ({children}) -> 
         return m "div",
             style:
-                width: "#{100}vw"
-                height: "#{100}vh"
+                position: "relative"
+                width: "100vw"
+                height: "100vh"
                 backgroundColor: "black"
             m "svg",
-                viewBox: "#{0} #{0} #{1600} #{900}"
+                viewBox: "0 0 1600 900"
                 preserveAspectRatio: "xMidYMid meet"
                 style: 
                     display: "block"
@@ -252,18 +254,22 @@ class MarpSlide
                     overflow: "hidden"
                     overflowClipMargin: "content-box"
                 m "foreignObject",
+                    x: 0
+                    y: 0
                     width: 1600
                     height: 900
-                    #style:
-                    #     marginBottom: "27"
+                    style:
+                        margin: 0
+                    # style:
                     #     overflow: "hidden"
                     #     overflowClipMargin: "content-box"                  
-                    m "section", 
+                    m "div", 
                         "xmlns": "http://www.w3.org/1999/xhtml"
                         style:
                             backgroundColor: "white"
-                            width: "1600" # vunits don't work here (???)
-                            height: "900"
+                            width: "1600px" # vunits don't work here (???)
+                            height: "900px"
+                            overflow: "hidden"
                         children
 
 
