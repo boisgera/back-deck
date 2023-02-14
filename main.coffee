@@ -2,11 +2,19 @@ import m from "https://cdn.skypack.dev/mithril";
 import * as commonmark from "https://cdn.skypack.dev/commonmark"
 import * as uuid from 'https://jspm.dev/uuid';
 
-# TODO: Mathjax (switch the markdown generator? See what marp is using?)
+r = String.raw
 
-# TODO: define r = String.raw and enjoy the r"""kcldkldk""" raw strings
+# DONE: Mathjax (switch the markdown generator? See what marp is using?)
+
+# DONE: define r = String.raw and enjoy the r"""kcldkldk""" raw strings
 
 # TODO: sensible default style
+
+# TODO: merge MarkdownWithMath into Markdown 
+
+# TODO: navigation (surprisingly hard?)
+
+# TODO: Study MarpSlide alternative with transforms.
 
 # TODO: what scheme for component to register a (link or css) dependency
 #       that we want to be included but not TWICE? Is there something in
@@ -16,6 +24,9 @@ import * as uuid from 'https://jspm.dev/uuid';
 # TODO: replicate slides pattern that work, see e.g. 
 #       https://www.canva.com/learn/keynote-presentations/
 
+
+# TODO: manage head with mithril ? Mmmm except its own loading script?
+#       Render once? Would the scripts be executed?
 
 document.head.innerHTML += 
 """
@@ -32,6 +43,7 @@ document.head.innerHTML +=
 <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet"> 
 """
 
+# Css Reset + Basis
 document.head.innerHTML += 
 """
 <style> 
@@ -40,11 +52,39 @@ document.head.innerHTML +=
   padding: 0;
 }
 html {
-  font-family: Inter;
+  font-family: Figtree;
   font-size: 24px;
 }
 </style>
 """
+
+# Test Script
+document.head.innerHTML += """
+<script type="text/javascript">
+    console.log("Test script");
+</script>
+"""
+
+# MathJax
+# Warning: scripts can't be added via innerHTML if we want an execution
+script = document.createElement "script"
+script.textContent = 
+    """
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            // displayMath: [['$$',' $$'], ["\\[","\\]"]],
+        },
+        svg: {
+            fontCache: 'global'
+        }
+        };
+    """
+document.head.appendChild script
+script = document.createElement "script"
+script.setAttribute "src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+document.head.appendChild script
+
 
 
 class Hello
@@ -85,6 +125,7 @@ class Hero
             m "h1", vnode.children
 
 # TODO: accept style and class and id forwarding (?). Why stop there?
+# TODO: math support ($ and $$ first? Raw Latex then?)
 class Markdown
     view: (vnode) ->
         {attrs, children} = vnode
@@ -94,6 +135,47 @@ class Markdown
         ast = reader.parse(text)
         html = writer.render(ast)
         m.trust(html)
+
+
+# TODO: regexp $stuff$ and $$\nstuff\n$$, replace by numbers, get a list,
+#       convert to HTML, backsubstitute.
+
+# patterns: $$no blankline (\n\n)$$
+# patterns $no space$
+
+extractMath = (markdown) ->
+    pattern = /(?:\$\$(?<dm>(?:[^\$])*)\$\$)|(?:\$(?<im>(?:[^ \$])*)\$)/gs # /\$\$\n((?[^\$]|\$[^$])*)\n\$\$/gs
+    matches = Array.from markdown.matchAll pattern
+    subst = markdown.replaceAll pattern, "MATHJAXMATH"
+    [subst, matches]
+
+injectMath = (html, matches) ->
+    subst = html
+    for match in matches
+        if match.groups.dm
+            subst = subst.replace /MATHJAXMATH/, "$$$$" + match.groups.dm + r"$$$$"
+        else
+            subst = subst.replace /MATHJAXMATH/, "$" + match.groups.im + "$"
+    subst
+
+# TODO: I have not even manually texified the stuff and it works
+#       It may be fragile, especially wrt dynamic math.
+
+# TODO: fusion with "normal" Markdown : detect math pattern in string and
+#       act accordingly (do the Mathjax work only if necessary).
+class MarkdownWithMath
+    view: (vnode) ->
+        {attrs, children} = vnode
+        {text} = attrs
+        [text, matches] = extractMath text
+        reader = new commonmark.Parser()
+        ast = reader.parse(text)
+        writer = new commonmark.HtmlRenderer()
+        html = writer.render(ast)
+        html = injectMath html, matches
+        m.trust(html)
+
+
 
 class Slide
     view: ({children}) ->
@@ -272,10 +354,59 @@ class MarpSlide
                             overflow: "hidden"
                         children
 
+# Display Math ($$)
+# TODO: refresh content surgically on content change. (test with a button)
+class Math
+    view: (vnode) -> 
+        {src} = vnode.attrs
+        m "span", 
+            """
+            \\[
+            #{src}
+            \\]
+            """
+    oncreate: (vnode) ->
+        console.log "Math oncreate"
+        console.log window
+        console.log window.document
+        #window.MathJax.typeset()
+
 
 body = document.body
 # m.mount(body, view: -> m Hero, "Back Deck")
-m.route body, "/slide42",
+m.route body, "/markdown-math",
+    "/markdown-math":
+        view: -> m MarkdownWithMath, text:
+            r"""
+            Title
+            =====
+            
+            let me say that $a=1$
+
+            $$
+            \int_0^1 f(x) \, dx
+            $$
+
+            Buh
+
+            - I can't do that **Dave**!
+
+            -----
+
+            [Le Monde](https://www.lemonde.fr)
+
+            """
+    "/slide-math":
+        view: ->
+            m "div", 
+                style:
+                    fontSize: "48px"
+                m Markdown,      # TODO: clear the text / src api ?
+                    text: "I feel your lovin' ❤️"
+                m Math, 
+                    src: r"\int_0^1 f(x) \, dx"
+                m Markdown,      # TODO: clear the text / src api ?
+                    text: "I feel your lovin' ❤️"
     "/slide42":
         view: ->
             m MarpSlide,
