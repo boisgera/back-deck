@@ -8,13 +8,13 @@ r = String.raw
 
 # DONE: define r = String.raw and enjoy the r"""kcldkldk""" raw strings
 
+# DONE: Study MarpSlide alternative with transforms.
+
 # TODO: sensible default style
 
 # TODO: merge MarkdownWithMath into Markdown 
 
 # TODO: navigation (surprisingly hard?)
-
-# TODO: Study MarpSlide alternative with transforms.
 
 # TODO: what scheme for component to register a (link or css) dependency
 #       that we want to be included but not TWICE? Is there something in
@@ -66,7 +66,8 @@ document.head.innerHTML += """
 """
 
 # MathJax
-# Warning: scripts can't be added via innerHTML if we want an execution
+# Warning: scripts can't be added via innerHTML if we want an execution.
+#          We need to create the elements using the proper API.
 script = document.createElement "script"
 script.textContent = 
     """
@@ -75,10 +76,18 @@ script.textContent =
             inlineMath: [['$', '$'], ['\\(', '\\)']],
             // displayMath: [['$$',' $$'], ["\\[","\\]"]],
         },
+        pageReady: -> undefined // I'd like the "unlock" of a promise here, checkable by await.
+            // for the pieces of code that will need for example MathJax.typeset to be defined.
+            // nah, fuck, that won't work either, mithril lifecycle methods cannot be async.
+            // better try a "global lock" that won't mount the mithril stuff until it's ok.
+            // Can I do that?
+            // Have a look at locks ? https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API#browser_compatibility
+            // Or Mutex Stuff? https://blog.mayflower.de/6369-javascript-mutex-synchronizing-async-operations.html?cookie-state-change=1676497112646
+        }
         svg: {
             fontCache: 'global'
         }
-        };
+    };
     """
 document.head.appendChild script
 script = document.createElement "script"
@@ -174,6 +183,26 @@ class MarkdownWithMath
         html = writer.render(ast)
         html = injectMath html, matches
         m.trust(html)
+
+class Markdown
+    view: (vnode) ->
+        {attrs, children} = vnode
+        {text} = attrs
+        [text, matches] = extractMath text # Test if matches.length is 0
+        reader = new commonmark.Parser()
+        ast = reader.parse(text)
+        writer = new commonmark.HtmlRenderer()
+        html = writer.render(ast)
+        html = injectMath html, matches
+        m.trust(html)
+    oncreate: ->
+        console.log "oncreate"
+        console.log window.MathJax.typeset
+        window.MathJax.typeset()
+    onupdate: ->
+        console.log "onupdate"
+        window.MathJax.typeset()
+
 
 
 
@@ -278,6 +307,7 @@ class Slide42
                 gap: 48 + "px"
                 alignItems: "center"
                 overflow: "hidden"
+                backgroundColor: "white"
             m ScopedStyle, 
                 id: id
                 css:
@@ -354,9 +384,34 @@ class MarpSlide
                             overflow: "hidden"
                         children
 
+class TransformSlide
+    view: ({children}) -> 
+        width = window.innerWidth
+        height = window.innerHeight
+        maxRatio = Math.min(width/1600, height/900)
+        offset = 
+            if width/1600 >= height/900 # wide
+                "#{(width - height*16/9)/2}px, 0px"
+            else
+                "0px, #{(height - width*9/16)/2}px"
+        m "div",
+            style:
+                width: "100vw"
+                height: "100vh"
+                backgroundColor: "black"
+                overflow: "hidden"
+            m "div",
+                style:
+                    transformOrigin: "top left" 
+                    transform: "translate(#{offset}) scale(#{maxRatio})"
+                    width: "1600px"
+                    height: "900px"
+                    overflow: "hidden"
+                children
+
 # Display Math ($$)
 # TODO: refresh content surgically on content change. (test with a button)
-class Math
+class DisplayMath
     view: (vnode) -> 
         {src} = vnode.attrs
         m "span", 
@@ -365,37 +420,46 @@ class Math
             #{src}
             \\]
             """
-    oncreate: (vnode) ->
-        console.log "Math oncreate"
-        console.log window
-        console.log window.document
-        #window.MathJax.typeset()
+
 
 
 body = document.body
+addEventListener "resize", -> m.redraw()
+
 # m.mount(body, view: -> m Hero, "Back Deck")
-m.route body, "/markdown-math",
+
+text = 
+    r"""
+    Title
+    =====
+
+    let me say that $a=1$
+
+    $$
+    \int_0^1 f(x) \, dx
+    $$
+
+    Buh
+
+    - I can't do that **Dave**!
+
+    -----
+
+    [Le Monde](https://www.lemonde.fr)
+
+    """
+
+m.route body, "/meuh",
+    "/meuh": 
+        view: -> m "p", "Hello world!"
     "/markdown-math":
-        view: -> m MarkdownWithMath, text:
-            r"""
-            Title
-            =====
-            
-            let me say that $a=1$
-
-            $$
-            \int_0^1 f(x) \, dx
-            $$
-
-            Buh
-
-            - I can't do that **Dave**!
-
-            -----
-
-            [Le Monde](https://www.lemonde.fr)
-
-            """
+        view: -> [
+            m Markdown, 
+                text: text
+            m "button",
+                onclick: -> text += r" $x=1$ "
+                "add formula"
+        ]
     "/slide-math":
         view: ->
             m "div", 
@@ -403,13 +467,17 @@ m.route body, "/markdown-math",
                     fontSize: "48px"
                 m Markdown,      # TODO: clear the text / src api ?
                     text: "I feel your lovin' ❤️"
-                m Math, 
+                m DisplayMath, 
                     src: r"\int_0^1 f(x) \, dx"
                 m Markdown,      # TODO: clear the text / src api ?
                     text: "I feel your lovin' ❤️"
     "/slide42":
         view: ->
             m MarpSlide,
+                m Slide42
+    "/slide43":
+        view: ->
+            m TransformSlide,
                 m Slide42
     "/code": 
         view: ->
