@@ -10,6 +10,10 @@ r = String.raw
 
 # DONE: Study MarpSlide alternative with transforms.
 
+# ------------------------------------------------------------------------------
+
+# TODO: basic left/right arrow navigation between slides.
+
 # TODO: sensible default style
 
 # TODO: merge MarkdownWithMath into Markdown 
@@ -89,7 +93,10 @@ script.textContent =
         }
     };
     """
+
+console.log "script:", script
 document.head.appendChild script
+
 script = document.createElement "script"
 script.setAttribute "src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
 document.head.appendChild script
@@ -449,82 +456,110 @@ text =
 
     """
 
-m.route body, "/meuh",
-    "/meuh": 
-        view: -> m "p", "Hello world!"
-    "/markdown-math":
-        view: -> [
+# DONE: variadic or not? I'd say yes (one less separator ...)
+# TODO: Work with kwargs somehow so that the calling SYNTAX is less unwieldy?
+#       sequences of objects are syntactically painful in coffeescript.
+#       (Objects over arrays?). Note: no such pb if we used named components
+#       instead of POJOs, so let's not get to worked up about this.
+deck = (root, slides...) -> 
+    console.log ">>>", slides
+    console.log "***", (["/#{i}", slide] for slide, i in slides) # BUGGY !
+    m.route root, "/0", 
+        Object.fromEntries (["/#{i}", slide] for slide, i in slides)
+
+deck body,
+    {view: -> m "p", "Hello world!"}
+    {view: -> 
+        [
             m Markdown, 
                 text: text
             m "button",
-                onclick: -> text += r" $x=1$ "
+                onclick: -> 
+                    text += r" $x=1$ "
                 "add formula"
         ]
-    "/slide-math":
-        view: ->
-            m "div", 
-                style:
-                    fontSize: "48px"
-                m Markdown,      # TODO: clear the text / src api ?
-                    text: "I feel your lovin' ❤️"
-                m DisplayMath, 
-                    src: r"\int_0^1 f(x) \, dx"
-                m Markdown,      # TODO: clear the text / src api ?
-                    text: "I feel your lovin' ❤️"
-    "/slide42":
-        view: ->
-            m MarpSlide,
-                m Slide42
-    "/slide43":
-        view: ->
-            m TransformSlide,
-                m Slide42
-    "/code": 
-        view: ->
-            m "div",
-                style: 
-                    padding: "1em"
-                m Code, src: src
-    "/splash": 
-        view: -> m Hero, [
-            "Back Deck",
-            m "a", href: "#!hello", "👋"
-            m "a", href: "#!pencil", "✏️"
-            m "a", href: "#!markdown", "📄"
-        ]
-    "/hello": 
-        view: -> m Hero, "👋 Hello!"
-    "/pencil": 
-        view: -> 
-            m Slide,
-                m Background, 
-                    url: "images/joanna-kosinska-1_CMoFsPfso-unsplash.jpg"
-    "/markdown":
-        view: -> m Markdown, text:
-            """
-            Title
-            =====
+    }
+    {view: ->
+        m TransformSlide,
+            m Slide42
+    }
 
-            Buh
+# m.route body, "/meuh",
+#     "/meuh": 
+#         view: -> m "p", "Hello world!"
+#     "/markdown-math":
+#         view: -> [
+#             m Markdown, 
+#                 text: text
+#             m "button",
+#                 onclick: -> text += r" $x=1$ "
+#                 "add formula"
+#         ]
+#     "/slide-math":
+#         view: ->
+#             m "div", 
+#                 style:
+#                     fontSize: "48px"
+#                 m Markdown,      # TODO: clear the text / src api ?
+#                     text: "I feel your lovin' ❤️"
+#                 m DisplayMath, 
+#                     src: r"\int_0^1 f(x) \, dx"
+#                 m Markdown,      # TODO: clear the text / src api ?
+#                     text: "I feel your lovin' ❤️"
+#     "/slide42":
+#         view: ->
+#             m MarpSlide,
+#                 m Slide42
+#     "/slide43":
+#         view: ->
+#             m TransformSlide,
+#                 m Slide42
+#     "/code": 
+#         view: ->
+#             m "div",
+#                 style: 
+#                     padding: "1em"
+#                 m Code, src: src
+#     "/splash": 
+#         view: -> m Hero, [
+#             "Back Deck",
+#             m "a", href: "#!hello", "👋"
+#             m "a", href: "#!pencil", "✏️"
+#             m "a", href: "#!markdown", "📄"
+#         ]
+#     "/hello": 
+#         view: -> m Hero, "👋 Hello!"
+#     "/pencil": 
+#         view: -> 
+#             m Slide,
+#                 m Background, 
+#                     url: "images/joanna-kosinska-1_CMoFsPfso-unsplash.jpg"
+#     "/markdown":
+#         view: -> m Markdown, text:
+#             """
+#             Title
+#             =====
 
-            - I can't do that **Dave**!
+#             Buh
 
-            -----
+#             - I can't do that **Dave**!
 
-            [Le Monde](https://www.lemonde.fr)
+#             -----
 
-            """
-    "/twocolumn":
-        view: ->
-            m Slide, # TODO: TwoColumnSlide, or columns option to Slide?  
-                m Row, [
-                    m "div",
-                        style:
-                            width: "25%"
-                        m Background, 
-                            url: "images/joanna-kosinska-1_CMoFsPfso-unsplash.jpg"
-                    m "div",
-                        style:
-                            width: "75%" 
-                        m Markdown, text: "# This is the end"
-                ]
+#             [Le Monde](https://www.lemonde.fr)
+
+#             """
+#     "/twocolumn":
+#         view: ->
+#             m Slide, # TODO: TwoColumnSlide, or columns option to Slide?  
+#                 m Row, [
+#                     m "div",
+#                         style:
+#                             width: "25%"
+#                         m Background, 
+#                             url: "images/joanna-kosinska-1_CMoFsPfso-unsplash.jpg"
+#                     m "div",
+#                         style:
+#                             width: "75%" 
+#                         m Markdown, text: "# This is the end"
+#                 ]
