@@ -12,6 +12,10 @@ r = String.raw
 
 # ------------------------------------------------------------------------------
 
+# TODO: deal with MathJax async loading and retypeset when needed.
+
+# TODO: sync of controller UI options. Wrap this stuff in a decent UI component?
+
 # TODO: basic left/right arrow navigation between slides.
 
 # TODO: sensible default style
@@ -32,12 +36,12 @@ r = String.raw
 # TODO: manage head with mithril ? Mmmm except its own loading script?
 #       Render once? Would the scripts be executed?
 
-document.head.innerHTML += 
-"""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-"""
+# document.head.innerHTML += 
+# """
+# <link rel="preconnect" href="https://fonts.googleapis.com">
+# <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+# <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+# """
 
 # Google Fonts / Figtree
 document.head.innerHTML +=
@@ -45,6 +49,14 @@ document.head.innerHTML +=
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet"> 
+"""
+
+# Google Fonts / Source Sans Pro
+document.head.innerHTML +=
+"""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap" rel="stylesheet"> 
 """
 
 # Css Reset + Basis
@@ -62,16 +74,16 @@ html {
 </style>
 """
 
-# Test Script
-document.head.innerHTML += """
-<script type="text/javascript">
-    console.log("Test script");
-</script>
-"""
+# # Test Script
+# document.head.innerHTML += """
+# <script type="text/javascript">
+#     console.log("Test script");
+# </script>
+# """
 
-# MathJax
-# Warning: scripts can't be added via innerHTML if we want an execution.
-#          We need to create the elements using the proper API.
+# # MathJax
+# # Warning: scripts can't be added via innerHTML if we want an execution.
+# #          We need to create the elements using the proper API.
 script = document.createElement "script"
 script.textContent = 
     """
@@ -94,70 +106,70 @@ script.textContent =
     };
     """
 
-console.log "script:", script
-document.head.appendChild script
+# console.log "script:", script
+# document.head.appendChild script
 
-script = document.createElement "script"
-script.setAttribute "src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
-document.head.appendChild script
-
-
-
-class Hello
-    oninit: (vnode) ->
-        this.count = 0
-    view: (vnode) ->
-        state = vnode.state
-        m "main", [
-            m "h1", class: "title", "My first zapp",
-            m "button", onclick: (=> this.count++), this.count + " clicks",
-        ]
-
-# TODO: support gradients
-# TODO: support various image transformation (grey-ish, etc. see Marp)
-class Background 
-    view: (vnode) -> 
-        {attrs, children} = vnode
-        {url} = attrs
-        m "div", 
-            style: 
-                backgroundImage: "url('#{url}')"
-                backgroundSize: "cover"
-                width: "100%"
-                height: "100%"
-            children
+# script = document.createElement "script"
+# script.setAttribute "src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+# document.head.appendChild script
 
 
-class Hero
-    view: (vnode) -> 
-        m "div", 
-            style: 
-                width: "100vw" 
-                height: "100vh"
-                backgroundColor: "#c8d8e4"
-                display: "flex"
-                alignItems: "center"
-                justifyContent: "center"
-            m "h1", vnode.children
 
-# TODO: accept style and class and id forwarding (?). Why stop there?
-# TODO: math support ($ and $$ first? Raw Latex then?)
-class Markdown
-    view: (vnode) ->
-        {attrs, children} = vnode
-        {text} = attrs
-        reader = new commonmark.Parser()
-        writer = new commonmark.HtmlRenderer()
-        ast = reader.parse(text)
-        html = writer.render(ast)
-        m.trust(html)
+# class Hello
+#     oninit: (vnode) ->
+#         this.count = 0
+#     view: (vnode) ->
+#         state = vnode.state
+#         m "main", [
+#             m "h1", class: "title", "My first zapp",
+#             m "button", onclick: (=> this.count++), this.count + " clicks",
+#         ]
+
+# # TODO: support gradients
+# # TODO: support various image transformation (grey-ish, etc. see Marp)
+# class Background 
+#     view: (vnode) -> 
+#         {attrs, children} = vnode
+#         {url} = attrs
+#         m "div", 
+#             style: 
+#                 backgroundImage: "url('#{url}')"
+#                 backgroundSize: "cover"
+#                 width: "100%"
+#                 height: "100%"
+#             children
 
 
-# TODO: regexp $stuff$ and $$\nstuff\n$$, replace by numbers, get a list,
-#       convert to HTML, backsubstitute.
+# class Hero
+#     view: (vnode) -> 
+#         m "div", 
+#             style: 
+#                 width: "100vw" 
+#                 height: "100vh"
+#                 backgroundColor: "#c8d8e4"
+#                 display: "flex"
+#                 alignItems: "center"
+#                 justifyContent: "center"
+#             m "h1", vnode.children
 
-# patterns: $$no blankline (\n\n)$$
-# patterns $no space$
+# # TODO: accept style and class and id forwarding (?). Why stop there?
+# # TODO: math support ($ and $$ first? Raw Latex then?)
+# class Markdown
+#     view: (vnode) ->
+#         {attrs, children} = vnode
+#         {text} = attrs
+#         reader = new commonmark.Parser()
+#         writer = new commonmark.HtmlRenderer()
+#         ast = reader.parse(text)
+#         html = writer.render(ast)
+#         m.trust(html)
+
+
+# # TODO: regexp $stuff$ and $$\nstuff\n$$, replace by numbers, get a list,
+# #       convert to HTML, backsubstitute.
+
+# # patterns: $$no blankline (\n\n)$$
+# # patterns $no space$
 
 extractMath = (markdown) ->
     pattern = /(?:\$\$(?<dm>(?:[^\$])*)\$\$)|(?:\$(?<im>(?:[^ \$])*)\$)/gs # /\$\$\n((?[^\$]|\$[^$])*)\n\$\$/gs
@@ -174,22 +186,22 @@ injectMath = (html, matches) ->
             subst = subst.replace /MATHJAXMATH/, "$" + match.groups.im + "$"
     subst
 
-# TODO: I have not even manually texified the stuff and it works
-#       It may be fragile, especially wrt dynamic math.
+# # TODO: I have not even manually texified the stuff and it works
+# #       It may be fragile, especially wrt dynamic math.
 
-# TODO: fusion with "normal" Markdown : detect math pattern in string and
-#       act accordingly (do the Mathjax work only if necessary).
-class MarkdownWithMath
-    view: (vnode) ->
-        {attrs, children} = vnode
-        {text} = attrs
-        [text, matches] = extractMath text
-        reader = new commonmark.Parser()
-        ast = reader.parse(text)
-        writer = new commonmark.HtmlRenderer()
-        html = writer.render(ast)
-        html = injectMath html, matches
-        m.trust(html)
+# # TODO: fusion with "normal" Markdown : detect math pattern in string and
+# #       act accordingly (do the Mathjax work only if necessary).
+# class MarkdownWithMath
+#     view: (vnode) ->
+#         {attrs, children} = vnode
+#         {text} = attrs
+#         [text, matches] = extractMath text
+#         reader = new commonmark.Parser()
+#         ast = reader.parse(text)
+#         writer = new commonmark.HtmlRenderer()
+#         html = writer.render(ast)
+#         html = injectMath html, matches
+#         m.trust(html)
 
 class Markdown
     view: (vnode) ->
@@ -213,66 +225,66 @@ class Markdown
 
 
 
-class Slide
-    view: ({children}) ->
-        return m "div",
-            style:
-                width: "100vw"
-                height: "100vh"
-            children
+# class Slide
+#     view: ({children}) ->
+#         return m "div",
+#             style:
+#                 width: "100vw"
+#                 height: "100vh"
+#             children
 
-class Row
-    view: ({children}) ->
-        m "div", 
-            style:
-               display: "flex"
-               flexDirection: "row"
-               height: "100%"    
-            children
+# class Row
+#     view: ({children}) ->
+#         m "div", 
+#             style:
+#                display: "flex"
+#                flexDirection: "row"
+#                height: "100%"    
+#             children
 
-src = """
-if True:
-    pass
-"""
+# src = """
+# if True:
+#     pass
+# """
 
-# TODO: width-aware stuff, black'd.
+# # TODO: width-aware stuff, black'd.
 
-class Code 
-    view: (vnode) ->
-        {src} = vnode.attrs # TODO: numeric characters (default ?)
-                            # Should we register resize event? 
-                            # addEventListener('resize', m.redraw)
-                            # Use a discrete "grid?" (40, 50, 60, 70, 80, 90?)
-                            # TODO: add "current" 
-        m "pre", 
-            style:
-                overflow: "auto"
-                width: "23em" # make an option for code width, calc the extra stuff.
-                backgroundColor: "rgb(235, 236, 237)"
-                padding: "1em 1.5em"
-            m "code",
-                style:
-                    fontFamily: "'Fira Code'"
-                    fontSize: "16px"
-                src
+# class Code 
+#     view: (vnode) ->
+#         {src} = vnode.attrs # TODO: numeric characters (default ?)
+#                             # Should we register resize event? 
+#                             # addEventListener('resize', m.redraw)
+#                             # Use a discrete "grid?" (40, 50, 60, 70, 80, 90?)
+#                             # TODO: add "current" 
+#         m "pre", 
+#             style:
+#                 overflow: "auto"
+#                 width: "23em" # make an option for code width, calc the extra stuff.
+#                 backgroundColor: "rgb(235, 236, 237)"
+#                 padding: "1em 1.5em"
+#             m "code",
+#                 style:
+#                     fontFamily: "'Fira Code'"
+#                     fontSize: "16px"
+#                 src
 
-# The issue I have here: I like inline style better (more coffee, less css,
-# easier to deal with), BUT I'd like to style the <strong> children, to assign
-# them a given weight and color, AND I don't wanna mess with the markdown
-# stuff (I can't deal with strong elements as Mithril components).
-#
-# Most reasonable option?
-#
-# Hack I think of: make a style sheet that selects some convoluted data attribute,
-# attach it to Markdown. Naaaaah, Markdown doesn't honor the extra attributes
-# (and that's a feature). Do that AND an extra wrapping level ... WTF the mess
-# that we have to do to emulate scoped css. Can I use a shadow dom here?
+# # The issue I have here: I like inline style better (more coffee, less css,
+# # easier to deal with), BUT I'd like to style the <strong> children, to assign
+# # them a given weight and color, AND I don't wanna mess with the markdown
+# # stuff (I can't deal with strong elements as Mithril components).
+# #
+# # Most reasonable option?
+# #
+# # Hack I think of: make a style sheet that selects some convoluted data attribute,
+# # attach it to Markdown. Naaaaah, Markdown doesn't honor the extra attributes
+# # (and that's a feature). Do that AND an extra wrapping level ... WTF the mess
+# # that we have to do to emulate scoped css. Can I use a shadow dom here?
 
 
-# TODO: manage css being text as a special case
-# Rk: I could add the scoping id as an ancestor to every css rule, 
-#     but what if we want something more precise wrt this ancestor
-#     I guess that if that happens, i'll introduce :scope.
+# # TODO: manage css being text as a special case
+# # Rk: I could add the scoping id as an ancestor to every css rule, 
+# #     but what if we want something more precise wrt this ancestor
+# #     I guess that if that happens, i'll introduce :scope.
 
 # See https://github.com/MithrilJS/mithril.js/blob/master/render/render.js#L798
 uppercaseRegex = /[A-Z]/g
@@ -293,8 +305,8 @@ ScopedStyle = (initialVnode) ->
             cssText
 
 
-# TODO: study the "freeze to 16/9" (or 4/3?) trick of marp with HTML in SVG in HTML.
-# Maybe there are some other ways (transforms, that kind of thing, like reveal?)
+# # TODO: study the "freeze to 16/9" (or 4/3?) trick of marp with HTML in SVG in HTML.
+# # Maybe there are some other ways (transforms, that kind of thing, like reveal?)
 
 #See <https://www.canva.com/learn/keynote-presentations/>
 class Slide42
@@ -347,49 +359,86 @@ class Slide42
                         **no strategists**
                         """
 
-# TODO: torture test wrt attributes & resize. Currently the visible overflow
-#       plus the absence of min height can yield weird, non-centered graphics.
-#       But overall, the stuff works.
-# TODO: display the background which is not foreign object differently.
-#       Yeah, better. Easier to spot the fuck that is going on.
-class MarpSlide
-    view: ({children}) -> 
-        return m "div",
-            style:
-                position: "relative"
-                width: "100vw"
-                height: "100vh"
-                backgroundColor: "black"
-            m "svg",
-                viewBox: "0 0 1600 900"
-                preserveAspectRatio: "xMidYMid meet"
-                style: 
-                    display: "block"
-                    width: "100%"
-                    height: "100%"
-                    position: "absolute"
-                    top: 0
-                    left: 0
-                    overflow: "hidden"
-                    overflowClipMargin: "content-box"
-                m "foreignObject",
-                    x: 0
-                    y: 0
-                    width: 1600
-                    height: 900
-                    style:
-                        margin: 0
-                    # style:
-                    #     overflow: "hidden"
-                    #     overflowClipMargin: "content-box"                  
-                    m "div", 
-                        "xmlns": "http://www.w3.org/1999/xhtml"
-                        style:
-                            backgroundColor: "white"
-                            width: "1600px" # vunits don't work here (???)
-                            height: "900px"
-                            overflow: "hidden"
-                        children
+class StyledMarkdown
+    view: (vnode) ->
+        {attrs, children} = vnode
+        {text, id} = attrs
+        id ?= "uuid-" + uuid.v4()
+        m "div",
+            id: id
+            m ScopedStyle,
+                id: id
+                css:
+                    "": 
+                        padding: "24px"
+                    h1:
+                        fontWeight: 600
+                        fontFamily: "Source Sans Pro"
+                        fontSize: "96px"
+                        lineHeight: 1.2
+                        textTransform: "uppercase"
+                        textAlign: "center"
+                        color: "#222"
+                    h2:
+                        fontWeight: 600
+                        fontFamily: "Source Sans Pro"
+                        fontSize: 48 * Math.sqrt(2) + "px"
+                        lineHeight: 1.2
+                        textTransform: "uppercase"
+                        textAlign: "center"
+                        color: "#222"
+                    p:
+                        fontWeight: "normal"
+                        fontFamily: "Source Sans Pro"
+                        fontSize: 24 * Math.sqrt(2) + "px"
+                        lineHeight: 1.2
+                        color: "#222"
+                        marginBottom: "24px"
+            m Markdown, {text: text}, children
+
+# # TODO: torture test wrt attributes & resize. Currently the visible overflow
+# #       plus the absence of min height can yield weird, non-centered graphics.
+# #       But overall, the stuff works.
+# # TODO: display the background which is not foreign object differently.
+# #       Yeah, better. Easier to spot the fuck that is going on.
+# class MarpSlide
+#     view: ({children}) -> 
+#         return m "div",
+#             style:
+#                 position: "relative"
+#                 width: "100vw"
+#                 height: "100vh"
+#                 backgroundColor: "black"
+#             m "svg",
+#                 viewBox: "0 0 1600 900"
+#                 preserveAspectRatio: "xMidYMid meet"
+#                 style: 
+#                     display: "block"
+#                     width: "100%"
+#                     height: "100%"
+#                     position: "absolute"
+#                     top: 0
+#                     left: 0
+#                     overflow: "hidden"
+#                     overflowClipMargin: "content-box"
+#                 m "foreignObject",
+#                     x: 0
+#                     y: 0
+#                     width: 1600
+#                     height: 900
+#                     style:
+#                         margin: 0
+#                     # style:
+#                     #     overflow: "hidden"
+#                     #     overflowClipMargin: "content-box"                  
+#                     m "div", 
+#                         "xmlns": "http://www.w3.org/1999/xhtml"
+#                         style:
+#                             backgroundColor: "white"
+#                             width: "1600px" # vunits don't work here (???)
+#                             height: "900px"
+#                             overflow: "hidden"
+#                         children
 
 class TransformSlide
     view: ({children}) -> 
@@ -416,45 +465,45 @@ class TransformSlide
                     overflow: "hidden"
                 children
 
-# Display Math ($$)
-# TODO: refresh content surgically on content change. (test with a button)
-class DisplayMath
-    view: (vnode) -> 
-        {src} = vnode.attrs
-        m "span", 
-            """
-            \\[
-            #{src}
-            \\]
-            """
+# # Display Math ($$)
+# # TODO: refresh content surgically on content change. (test with a button)
+# class DisplayMath
+#     view: (vnode) -> 
+#         {src} = vnode.attrs
+#         m "span", 
+#             """
+#             \\[
+#             #{src}
+#             \\]
+#             """
 
 
 
-body = document.body
-addEventListener "resize", -> m.redraw()
+# body = document.body
+# addEventListener "resize", -> m.redraw()
 
-# m.mount(body, view: -> m Hero, "Back Deck")
+# # m.mount(body, view: -> m Hero, "Back Deck")
 
-text = 
-    r"""
-    Title
-    =====
+# text = 
+#     r"""
+#     Title
+#     =====
 
-    let me say that $a=1$
+#     let me say that $a=1$
 
-    $$
-    \int_0^1 f(x) \, dx
-    $$
+#     $$
+#     \int_0^1 f(x) \, dx
+#     $$
 
-    Buh
+#     Buh
 
-    - I can't do that **Dave**!
+#     - I can't do that **Dave**!
 
-    -----
+#     -----
 
-    [Le Monde](https://www.lemonde.fr)
+#     [Le Monde](https://www.lemonde.fr)
 
-    """
+#     """
 
 # DONE: variadic or not? I'd say yes (one less separator ...)
 # TODO: Work with kwargs somehow so that the calling SYNTAX is less unwieldy?
@@ -462,27 +511,64 @@ text =
 #       (Objects over arrays?). Note: no such pb if we used named components
 #       instead of POJOs, so let's not get to worked up about this.
 deck = (root, slides...) -> 
-    console.log ">>>", slides
-    console.log "***", (["/#{i}", slide] for slide, i in slides) # BUGGY !
+    rc = 
+        next: -> 
+            index = Number(m.route.get()[1..]) + 1
+            index = Math.min(index, slides.length - 1)
+            m.route.set "/" + index
     m.route root, "/0", 
         Object.fromEntries (["/#{i}", slide] for slide, i in slides)
+    rc
 
-deck body,
-    {view: -> m "p", "Hello world!"}
-    {view: -> 
-        [
-            m Markdown, 
-                text: text
-            m "button",
-                onclick: -> 
-                    text += r" $x=1$ "
-                "add formula"
-        ]
-    }
-    {view: ->
+rc = deck document.body, 
+    view: -> [ 
+        m "p", "Hello world!"
+        m "button", 
+            onclick: -> rc.next()
+            "Next"
+    ]
+,
+    view: -> [ 
+        m "p", "Hello world #1!"
+        m "button", 
+            onclick: -> rc.next()
+            "Next"
+    ]
+,
+    view: -> [
+        m Markdown, 
+            text: "Hi **guys** and **gals**!",
+        m "button", 
+            onclick: -> rc.next()
+            "Next"
+    ]
+,
+    view: -> [
+        m StyledMarkdown, 
+            text: """
+            📝 Convention
+            --------------------------------------------------------------------
+
+            In the sequel, we will assume that time-dependent functions defined 
+            only for non-negative times are zero for negative times
+
+            With this convention, they become causal signals.
+
+            $$
+            \int_0^1 f(x) \, dx
+            $$
+
+            🏷️ **SISO** = single-input & single-output.
+            """,
+        m "button", 
+            onclick: -> rc.next()
+            "Next"
+    ]
+,
+    view: ->
         m TransformSlide,
             m Slide42
-    }
+
 
 # m.route body, "/meuh",
 #     "/meuh": 
