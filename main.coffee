@@ -12,6 +12,13 @@ r = String.raw
 
 # ------------------------------------------------------------------------------
 
+# TODO : manage stuff that could be done at compile-time with mithril and
+#        split both stuff. (So that we have an option to generate a 
+#        prerendered index.html later.)
+# TODO : scripts added this way are not executed (MathJax loading)
+
+# TODO : dependency register?
+
 # TODO: deal with MathJax async loading and retypeset when needed.
 
 # TODO: sync of controller UI options. Wrap this stuff in a decent UI component?
@@ -36,83 +43,73 @@ r = String.raw
 # TODO: manage head with mithril ? Mmmm except its own loading script?
 #       Render once? Would the scripts be executed?
 
-# document.head.innerHTML += 
-# """
-# <link rel="preconnect" href="https://fonts.googleapis.com">
-# <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-# <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-# """
 
-# Google Fonts / Figtree
-document.head.innerHTML +=
-"""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet"> 
-"""
+# Document Handling
+# ------------------------------------------------------------------------------
+#
+# Here we assume that this script is imported and that's it. 
+# Nothing else is needed in <head>.
+#
 
-# Google Fonts / Source Sans Pro
-document.head.innerHTML +=
-"""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap" rel="stylesheet"> 
-"""
+# MathJax
+MathJaxHeader = -> 
+    view: -> [
+        m "script",
+            """
+            console.log('MathJax configuration'); // Kinda weird, I can't see this?!?
+            // other scripts added this way ARE executed !
+            window.MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    // displayMath: [['$$',' $$'], ["\\[","\\]"]],
+                },
+                svg: {
+                    fontCache: 'global'
+                }
+            };
+            """
+        m "script",
+            src: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ]
 
-# Css Reset + Basis
-document.head.innerHTML += 
-"""
-<style> 
-* {
-  margin: 0;
-  padding: 0;
-}
-html {
-  font-family: Figtree;
-  font-size: 24px;
-}
-</style>
+document.head.innerHTML += """
+<div id='mithril-head'></div>
 """
 
-# # Test Script
-# document.head.innerHTML += """
-# <script type="text/javascript">
-#     console.log("Test script");
-# </script>
-# """
+head = document.getElementById("mithril-head")
 
-# # MathJax
-# # Warning: scripts can't be added via innerHTML if we want an execution.
-# #          We need to create the elements using the proper API.
-script = document.createElement "script"
-script.textContent = 
-    """
-    window.MathJax = {
-        tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            // displayMath: [['$$',' $$'], ["\\[","\\]"]],
-        },
-        pageReady: -> undefined // I'd like the "unlock" of a promise here, checkable by await.
-            // for the pieces of code that will need for example MathJax.typeset to be defined.
-            // nah, fuck, that won't work either, mithril lifecycle methods cannot be async.
-            // better try a "global lock" that won't mount the mithril stuff until it's ok.
-            // Can I do that?
-            // Have a look at locks ? https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API#browser_compatibility
-            // Or Mutex Stuff? https://blog.mayflower.de/6369-javascript-mutex-synchronizing-async-operations.html?cookie-state-change=1676497112646
+m.render head, [
+    m "link",
+        rel: "preconnect"
+        href: "https://fonts.googleapis.com"
+    m "link",
+        rel: "preconnect"
+        href: "https://fonts.gstatic.com"
+        crossorigin: true
+    m "link", # Figtree
+        rel: "stylesheet"
+        href: "https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Fira+Code:wght@300;400;500;600;700&display=swap" 
+    m "link", # Source Sans Pro
+        rel: "stylesheet"
+        href: "https://fonts.googleapis.com/css2?&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap"
+    m "style", # CSS Reset + Basis
+        """
+        * {
+            margin: 0;
+            padding: 0;
         }
-        svg: {
-            fontCache: 'global'
+        html {
+            font-family: Figtree;
+            font-size: 24px;
         }
-    };
-    """
+        """
+    m MathJaxHeader, 
+        id: "mh"
 
-# console.log "script:", script
-# document.head.appendChild script
+]
 
-# script = document.createElement "script"
-# script.setAttribute "src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
-# document.head.appendChild script
 
+# ------------------------------------------------------------------------------
 
 
 # class Hello
@@ -185,23 +182,6 @@ injectMath = (html, matches) ->
         else
             subst = subst.replace /MATHJAXMATH/, "$" + match.groups.im + "$"
     subst
-
-# # TODO: I have not even manually texified the stuff and it works
-# #       It may be fragile, especially wrt dynamic math.
-
-# # TODO: fusion with "normal" Markdown : detect math pattern in string and
-# #       act accordingly (do the Mathjax work only if necessary).
-# class MarkdownWithMath
-#     view: (vnode) ->
-#         {attrs, children} = vnode
-#         {text} = attrs
-#         [text, matches] = extractMath text
-#         reader = new commonmark.Parser()
-#         ast = reader.parse(text)
-#         writer = new commonmark.HtmlRenderer()
-#         html = writer.render(ast)
-#         html = injectMath html, matches
-#         m.trust(html)
 
 class Markdown
     view: (vnode) ->
@@ -300,7 +280,7 @@ ScopedStyle = (initialVnode) ->
             for key, value of rules
                 cssText += "  #{normalizeKey(key)}: #{String(value)};\n"
             cssText += "}\n\n"
-        console.log cssText
+        # console.log cssText
         m "style", 
             cssText
 
@@ -545,7 +525,7 @@ rc = deck document.body,
 ,
     view: -> [
         m StyledMarkdown, 
-            text: """
+            text: r"""
             📝 Convention
             --------------------------------------------------------------------
 
